@@ -44,7 +44,7 @@ class Motor{
   }
 
 
-}
+};
 
 class Ldr
 {
@@ -63,83 +63,7 @@ class Ldr
   }
 
 
-}
-
-class Robot
-{
-  //Define properties
-  ///Motors
-  Motor leftMotor;
-  Motor rightMotor;
-  const int speed = 240;
-  ///LDRs
-  Ldr leftLdr;
-  Ldr rightLdr;
-  const int maxLighting = 500;
-  ///Distance sensor
-  DistanceSensor distanceSensor;
-  const int maxDistance = 10;
-  ///Update intervals
-  int distanceSensorUpdateInterval;
-  int ldrUpdateInterval;
-  ///Last updates
-  long distanceSensorLastUpdate;
-  long ldrLastUpdate;
-
-
-  public: 
-  Robot(Motor leftMotor, Motor rightMotor, Ldr leftLdr, Ldr rightLdr, DistanceSensor distanceSensor, int distanceSensorUpdateInterval, int ldrUpdateInterval)
-  {
-    ///Motors
-    this->leftMotor = leftMotor;
-    this->rightMotor = rightMotor;
-    ///Ldrs
-    this->leftLdr = leftLdr;
-    this->rightLdr = rightLdr;
-    ///Distance sensor
-    this->distanceSensor = distanceSensor;
-    ///Update intervals
-    this->distanceSensorUpdateInterval = distanceSensorUpdateInterval;
-    this->ldrUpdateInterval = ldrUpdateInterval;
-  }
-
-  void Update()
-  {
-    //update distance sensor
-    if((millis() - this->distanceSensorLastUpdate) > this->distanceSensorUpdateInterval)  // time to update distance sensor
-    {
-      this->distanceSensorLastUpdate = millis();
-      int distance = this->distanceSensor.calculateDistance();
-      if(distance<maxDistance){
-        this->leftMotor.backward(speed);
-        this->leftMotor.backward(speed);
-      }
-    }
-
-    //update Ldrs
-    if((millis() - this->ldrLastUpdate) > this->ldrUpdateInterval)  // time to update ldrs
-    {
-      this->ldrLastUpdate = millis();
-      int leftLight = this->leftLdr.calculateLight();
-      int rightLight = this->rightLdr.calculateLight();
-      //Left motor update
-      if(leftLight > maxLight){
-        this->leftMotor.forward(speed);
-      }
-      else{
-        this->leftMotor.stop(speed);
-      }
-      //Right motor update
-      if(rightLight > maxLight){
-        this->rightMotor.forward(speed);
-      }
-      else{
-        this->rightMotor.stop(speed);
-      }
-    }
-  }
-
-}
+};
 
 class DistanceSensor
 {
@@ -173,24 +97,16 @@ class DistanceSensor
 
 
 
-}
-
-Robot robot;
-
-
-void setup() {
-  //Initialize robot and his components
-
-  //Components
+};
 
   ///Motors
   ////Left motor
   Motor leftMotor(3, 5, 4);
-  leftMotor.setup();
   ///Right motor
   Motor rightMotor(9, 8, 7);
-  rightMotor.setup();
-
+  const int baseSpeed = 440;
+  int currentLeftSpeed;
+  int currentRightSpeed;
   ///Ldrs
   ////Left ldr
   Ldr leftLdr(1);
@@ -199,16 +115,96 @@ void setup() {
 
   ///Distance sensor
   DistanceSensor distanceSensor(11,12);
+
+  const int maxDistance = 10;
+  const int maxLighting = 300;
+  const int baseLightning = 500;
+  ///Update intervals
+  int distanceSensorUpdateInterval = 10;
+  int ldrUpdateInterval = 10;
+  ///Last updates
+  long distanceSensorLastUpdate = 0;
+  long ldrLastUpdate = 0;
+
+void setup() {
+  //Initialize robot and his components
+
+  //Components
+
+  ///Motors
+  ////Left motor
+  leftMotor.setup();
+  ///Right motor
+  rightMotor.setup();
+
+
+  ///Distance sensor
   distanceSensor.setup();
 
-  //Robot
-  int distanceSensorUpdateInterval = 15;
-  int ldrUpdateInterval = 10;
-  robot(leftMotor,rightMotor,leftLdr,rightLdr,distanceSensor,distanceSensorUpdateInterval,ldrUpdateInterval);
+  currentLeftSpeed = baseSpeed;
+  currentRightSpeed = baseSpeed;
 
+  Serial.begin(9600);
 
 }
 
 void loop() {
-  robot.Update();
+  //update distance sensor
+    if((millis() - distanceSensorLastUpdate) > distanceSensorUpdateInterval)  // time to update distance sensor
+    {
+      Serial.println("Updating sensor");
+      distanceSensorLastUpdate = millis();
+      int distance = distanceSensor.calculateDistance();
+      Serial.print("Distance : ");
+      Serial.println(distance);
+      if(distance<maxDistance){
+        // leftMotor.backward(currentLeftSpeed);
+        // rightMotor.backward(currentRightSpeed);
+        leftMotor.backward(currentLeftSpeed);
+      }
+      else{
+        // leftMotor.forward(currentLeftSpeed);
+        // rightMotor.forward(currentRightSpeed);
+        leftMotor.forward(currentLeftSpeed);
+      }
+
+    }
+
+    // leftMotor.backward(currentLeftSpeed);
+    // rightMotor.backward(currentRightSpeed);
+    // leftMotor.forward(currentLeftSpeed);
+    // rightMotor.forward(currentRightSpeed);
+    
+
+    //update Ldrs
+    if((millis() - ldrLastUpdate) > ldrUpdateInterval)  // time to update ldrs
+    {
+      ldrLastUpdate = millis();
+      int leftLight = leftLdr.calculateLight();
+      int rightLight = rightLdr.calculateLight();
+      Serial.print("Lights: Left light = ");
+      Serial.println(leftLight);
+      Serial.print("; Right light = ");
+      Serial.println(rightLight);
+      //Left motor update
+      // if(leftLight > maxLighting){
+        currentLeftSpeed = updateSpeed(leftLight, baseSpeed, baseLightning);
+      // }
+      // if(rightLight > maxLighting){
+        currentRightSpeed = updateSpeed(rightLight, baseSpeed, baseLightning);
+      // }
+    }
+}
+
+int updateSpeed(int currentLightning, int baseSpeed, int baseLightning){
+
+  Serial.print("currentLightning : ");
+  Serial.println(currentLightning);
+  int newSpeed = (int) (baseSpeed * (float) currentLightning / baseLightning);
+  Serial.print("Fraction: ");
+  Serial.println((float) currentLightning / baseLightning);
+
+  Serial.print("New speed : ");
+  Serial.println(newSpeed);
+  return newSpeed;
 }
