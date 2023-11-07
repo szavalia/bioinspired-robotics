@@ -118,9 +118,9 @@ class DistanceSensor
 
   const int maxDistance = 10;
   const int maxLighting = 300;
-  const int baseLightning = 500;
+  const int baseLightning = 200;
   ///Update intervals
-  int distanceSensorUpdateInterval = 10;
+  int distanceSensorUpdateInterval = 50;
   int ldrUpdateInterval = 10;
   ///Last updates
   long distanceSensorLastUpdate = 0;
@@ -155,16 +155,17 @@ void loop() {
       Serial.println("Updating sensor");
       distanceSensorLastUpdate = millis();
       int distance = distanceSensor.calculateDistance();
-      Serial.print("Distance : ");
-      Serial.println(distance);
+      // Serial.print("Distance : ");
+      // Serial.println(distance);
       if(distance<maxDistance){
         // leftMotor.backward(currentLeftSpeed);
-        // rightMotor.backward(currentRightSpeed);
+        rightMotor.backward(currentRightSpeed);
         leftMotor.backward(currentLeftSpeed);
+        delay(2000);
       }
       else{
         // leftMotor.forward(currentLeftSpeed);
-        // rightMotor.forward(currentRightSpeed);
+        rightMotor.forward(currentRightSpeed);
         leftMotor.forward(currentLeftSpeed);
       }
 
@@ -193,18 +194,22 @@ void loop() {
       // if(rightLight > maxLighting){
         currentRightSpeed = updateSpeed(rightLight, baseSpeed, baseLightning);
       // }
+        Serial.print("currentLeftSpeed : ");
+        Serial.println(currentLeftSpeed);
+        Serial.print("currentRightSpeed : ");
+        Serial.println(currentRightSpeed);
     }
 }
 
 int updateSpeed(int currentLightning, int baseSpeed, int baseLightning){
 
-  Serial.print("currentLightning : ");
-  Serial.println(currentLightning);
-  int newSpeed = (int) (baseSpeed * (float) currentLightning / baseLightning);
-  Serial.print("Fraction: ");
-  Serial.println((float) currentLightning / baseLightning);
+  // Serial.print("currentLightning : ");
+  // Serial.println(currentLightning);
+  int newSpeed = (int) * (baseSpeed * (float) currentLightning / baseLightning);
+  // Serial.print("Fraction: ");
+  // Serial.println((float) currentLightning / baseLightning);
 
-  Serial.print("New speed : ");
-  Serial.println(newSpeed);
+  // Serial.print("New speed : ");
+  // Serial.println(newSpeed);
   return newSpeed;
 }
