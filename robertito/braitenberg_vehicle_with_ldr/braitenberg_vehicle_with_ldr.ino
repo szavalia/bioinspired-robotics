@@ -1,3 +1,17 @@
+#include <Servo.h>
+
+
+//define position name and value
+#define left 60
+#define right 120
+#define middle 90
+#define closed 60
+#define fullOpen 160
+#define halfOpen 120
+
+#define waitTime 750
+
+
 class Motor{
   //Define pins
   int en;
@@ -122,9 +136,18 @@ class DistanceSensor
   ///Update intervals
   int distanceSensorUpdateInterval = 50;
   int ldrUpdateInterval = 10;
+  int eyeUpdateInterval = 3000;
   ///Last updates
   long distanceSensorLastUpdate = 0;
   long ldrLastUpdate = 0;
+  long eyeLastUpdate = 0;
+
+  //define name of the servo motors
+  Servo upDownServo;
+  Servo rightLeftServo;
+
+  const int rightLeftPin = 10;
+  const int upDownPin = 2;
 
 void setup() {
   //Initialize robot and his components
@@ -144,7 +167,13 @@ void setup() {
   currentLeftSpeed = baseSpeed;
   currentRightSpeed = baseSpeed;
 
+  //Eye
+  ///define pin numbers of the servo motors
+  upDownServo.attach(upDownPin);
+  rightLeftServo.attach(rightLeftPin);
+
   Serial.begin(9600);
+
 
 }
 
@@ -189,23 +218,42 @@ void loop() {
       Serial.println(rightLight);
       //Left motor update
       // if(leftLight > maxLighting){
-        currentLeftSpeed = updateSpeed(leftLight, baseSpeed, baseLightning);
+        currentRightSpeed = updateSpeed(leftLight, baseSpeed, baseLightning);
       // }
       // if(rightLight > maxLighting){
-        currentRightSpeed = updateSpeed(rightLight, baseSpeed, baseLightning);
+        currentLeftSpeed = updateSpeed(rightLight, baseSpeed, baseLightning);
       // }
         Serial.print("currentLeftSpeed : ");
         Serial.println(currentLeftSpeed);
         Serial.print("currentRightSpeed : ");
         Serial.println(currentRightSpeed);
+
+        int direction = currentRightSpeed - currentLeftSpeed > 0 ? left : right;
+        rightLeftServo.write(direction);
+
     }
+
+    if ((millis() - eyeLastUpdate) > eyeUpdateInterval){
+      eyeLastUpdate = millis();
+      upDownServo.write(closed);
+      Serial.println(" Closing...");
+      
+    }
+
+    if(  millis() > eyeLastUpdate + 200 ){
+        upDownServo.write(fullOpen);
+        Serial.println(" Opening...");
+      }
+
+    
+    
 }
 
 int updateSpeed(int currentLightning, int baseSpeed, int baseLightning){
 
   // Serial.print("currentLightning : ");
   // Serial.println(currentLightning);
-  int newSpeed = (int) * (baseSpeed * (float) currentLightning / baseLightning);
+  int newSpeed = (int) (baseSpeed * (float) currentLightning / baseLightning);
   // Serial.print("Fraction: ");
   // Serial.println((float) currentLightning / baseLightning);
 
